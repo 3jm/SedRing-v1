@@ -66,7 +66,7 @@ void hooks::Setup() noexcept
 	MH_EnableHook(MH_ALL_HOOKS);
 }
 
-long __stdcall EndScene(IDirect3DDevice9* device) noexcept
+long __stdcall hooks::EndScene(IDirect3DDevice9* device) noexcept
 {
 	static const auto returnAddress = _ReturnAddress();
 	
@@ -84,7 +84,7 @@ long __stdcall EndScene(IDirect3DDevice9* device) noexcept
 	return result;
 }
 
-HRESULT __stdcall Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* params) noexcept
+HRESULT __stdcall hooks::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* params) noexcept
 {
 	ImGui_ImplDX9_InvalidateDeviceObjects();
 	const auto result = ResetOriginal(device, device, params);
