@@ -3,9 +3,7 @@
 #include <thread>
 
 // expose our cheat to main.cpp
-#include "./core/hooks.h"
-#include <thread>
-#include <cstdint>
+#include "core/hooks.h"
 
 // setup our cheat & unload it when exit key is pressed
 DWORD WINAPI Setup(LPVOID lpParam)
@@ -14,7 +12,6 @@ DWORD WINAPI Setup(LPVOID lpParam)
 	interfaces::Setup();    // capture interfaces
 	netvars::Setup();		// dump latest offsets
 	hooks::Setup();			// place hooks
-	gui::Setup();			// setup gui
 
 	// sleep our thread until unload key is pressed
 	while (!GetAsyncKeyState(VK_END))

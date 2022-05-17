@@ -1,13 +1,5 @@
 #include "hooks.h"
 
-#include <stdexcept>
-#include <intrin.h>
-
-
-#include "../../ext/imgui/imgui.h"
-#include "../../ext/imgui/imgui_impl_win32.h"
-#include "../../ext/imgui/imgui_impl_dx9.h"
-
 // include minhook for epic hookage
 #include "../../ext/minhook/minhook.h"
 
@@ -16,24 +8,6 @@
 void hooks::Setup() noexcept
 {
 	MH_Initialize();
-
-	if (MH_Initialize())
-		throw std::runtime_error("Unable to initialize minhook");
-
-	if (MH_CreateHook(
-		VirtualFunction(gui::device, 42),
-		&EndScene,
-		reinterpret_cast<void**>(&EndSceneOriginal)
-	)) throw std::runtime_error("Unbale to hook EndScene(");
-
-	if (MH_CreateHook(
-		VirtualFunction(gui::device, 16),
-		&Reset,
-		reinterpret_cast<void**>(&ResetOriginal)
-	)) throw std::runtime_error("Unbale to hook Reset(");
-
-	if (MH_EnableHook(MH_ALL_HOOKS))
-		throw std::runtime_error("Unable to enable hooks");
 
 	// AllocKeyValuesMemory hook
 	MH_CreateHook(
@@ -49,47 +23,30 @@ void hooks::Setup() noexcept
 		reinterpret_cast<void**>(&CreateMoveOriginal)
 	);
 
+	
 	// PaintTraverse hook
 	MH_CreateHook(
 		memory::Get(interfaces::panel, 41),
 		&PaintTraverse,
-		reinterpret_cast<void**>(&PaintTraverseOriginal)
-	);
-
+		reinterpret_cast<void**>(&PaintTraverseOriginal) 
+	); 
+	
+	/*
 	// DrawModel Hook
 	MH_CreateHook(
 		memory::Get(interfaces::studioRender, 29),
 		&DrawModel,
 		reinterpret_cast<void**>(&DrawModelOriginal)
+	); */
+
+	// DoPostScreenEffects Hook
+	MH_CreateHook(
+		memory::Get(interfaces::clientMode, 44),
+		&DoPostScreenSpaceEffects,
+		reinterpret_cast<void**>(&DoPostScreenSpaceEffectsOriginal) // original func
 	);
 
 	MH_EnableHook(MH_ALL_HOOKS);
-}
-
-long __stdcall hooks::EndScene(IDirect3DDevice9* device) noexcept
-{
-	static const auto returnAddress = _ReturnAddress();
-	
-	const auto result = EndSceneOriginal(device, device);
-
-	if (_ReturnAddress() == returnAddress)
-		return result;
-	
-	if(!gui::setup)
-		gui::SetupMenu(device);
-	
-	if(gui::open)
-		gui::Render();
-
-	return result;
-}
-
-HRESULT __stdcall hooks::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* params) noexcept
-{
-	ImGui_ImplDX9_InvalidateDeviceObjects();
-	const auto result = ResetOriginal(device, device, params);
-	ImGui_ImplDX9_CreateDeviceObjects();
-	return result;
 }
 
 void hooks::Destroy() noexcept
@@ -136,7 +93,7 @@ bool __stdcall hooks::CreateMove(float frameTime, CUserCmd* cmd) noexcept
 
 	return false;
 }
-
+/*
 void __stdcall hooks::DrawModel(
 	void* results,
 	const CDrawModelInfo& info,
@@ -145,7 +102,7 @@ void __stdcall hooks::DrawModel(
 	float* flexDelayedWeights,
 	const CVector& modelOrigin,
 	const std::int32_t flags
-	) noexcept
+) noexcept
 {
 	if (globals::localPlayer && info.renderable)
 	{
@@ -172,6 +129,58 @@ void __stdcall hooks::DrawModel(
 		}
 	}
 	DrawModelOriginal(interfaces::studioRender, results, info, bones, flexWeights, flexDelayedWeights, modelOrigin, flags);
+}
+*/
+void __stdcall hooks::DoPostScreenSpaceEffects(const void* viewSetup) noexcept
+{
+	if (globals::localPlayer && interfaces::engine->IsInGame())
+	{
+		for (int i = 0; i < interfaces::glow->glowObjects.size; i++)
+		{
+			IGlowManager::CGlowObject& glowObject = interfaces::glow->glowObjects[i];
+
+			if (glowObject.IsUnused())
+				continue;
+
+			if (!glowObject.entity)
+				continue;
+			
+			switch (glowObject.entity->GetClientClass()->classID)
+			{
+			case CClientClass::CCSPlayer:
+				if (!glowObject.entity->IsAlive())
+					break;
+				
+				if (glowObject.entity->GetTeam() == globals::localPlayer->GetTeam())
+				{
+					glowObject.SetColor(0.f, 0.f, 255.f, 1.f);
+				}
+				else
+				{
+					glowObject.SetColor(255.f, 0.f, 0.f, 1.f);
+				}
+				
+				break;
+				 
+			default:
+				break;
+			}
+			switch (glowObject.entity->GetClientClass()->classID)
+			{
+			case CClientClass::CChicken:
+				if (!glowObject.entity->IsAlive())
+					break;
+
+					glowObject.SetColor(255.f, 255.f, 0.f, 1.f);
+					
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+	DoPostScreenSpaceEffectsOriginal(interfaces::clientMode, viewSetup);
 }
 
 void __stdcall hooks::PaintTraverse(std::uintptr_t vguiPanel, bool forceRepaint, bool allowForce) noexcept
