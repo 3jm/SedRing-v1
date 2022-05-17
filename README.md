@@ -2,7 +2,7 @@
 - ✔️ None, works & builds as intended.
 
 # about cheat
-- panic key: End
+- panic key (uninject): End
 - show menu (future): Insert
 
 # compiling
