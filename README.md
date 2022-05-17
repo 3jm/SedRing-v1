@@ -1,6 +1,13 @@
 # Current Issues
 - ✔️ None, works & builds as intended.
 
+# compiling
+- set to Release
+- build x86
+- configuration type: Dynamic Library (.dll)
+- Use Multi-Byte Character Set
+- Linker-> SubSystem: Windows (/SUBSYSTEM:WINDOWS)
+
 # images of cheat
 - chams + box esp
 
