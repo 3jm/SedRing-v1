@@ -25,4 +25,4 @@
 - chams are disabled, if you want this to work with DrawModel/DrawModelExecute chams, inside of your DM/DME hook, check if interfaces::studioRender->IsForcedMaterialOverride() is true. If it is true, that means it is a glow model & you DO NOT want to apply chams to it - that will make them compatible.
 
 # road map
-- [ ] convert it all to a imgui menu and go from there
+- [ ] add name esp
