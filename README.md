@@ -1,6 +1,10 @@
 # Current Issues
 - ✔️ None, works & builds as intended.
 
+# about cheat
+- panic key: End
+- show menu (future): Insert
+
 # compiling
 - set to Release
 - build x86
